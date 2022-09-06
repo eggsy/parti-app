@@ -18,11 +18,18 @@ const audio3 = new Audio(thirdPartSfx);
 
 onMounted(() => {
   stopAll();
+
   if ("speechSynthesis" in window) isSupported.value = true;
+  else
+    alert(
+      "üzgünüm ama tarayıcın yazıyı sese dönüştürme özelliğini desteklemiyor :c"
+    );
+
+  input.value = new URLSearchParams(location.search).get("isim") || "";
 });
 
-const speakAndWaitForFinish = () => {
-  return new Promise((resolve) => {
+const speakAndWaitForFinish = () =>
+  new Promise((resolve) => {
     const utterThis = new SpeechSynthesisUtterance(input.value);
     utterThis.lang = "tr-TR";
 
@@ -32,6 +39,17 @@ const speakAndWaitForFinish = () => {
 
     synth.speak(utterThis);
   });
+
+const stopAll = () => {
+  audio1.pause();
+  audio2.pause();
+  audio3.pause();
+  audio1.currentTime = 0;
+  audio2.currentTime = 0;
+  audio3.currentTime = 0;
+
+  showVideo.value = false;
+  buttonVisible.value = false;
 };
 
 const speak = () => {
@@ -67,18 +85,6 @@ const speak = () => {
     showVideo.value = false;
     buttonVisible.value = false;
   };
-};
-
-const stopAll = () => {
-  audio1.pause();
-  audio2.pause();
-  audio3.pause();
-  audio1.currentTime = 0;
-  audio2.currentTime = 0;
-  audio3.currentTime = 0;
-
-  showVideo.value = false;
-  buttonVisible.value = false;
 };
 </script>
 
