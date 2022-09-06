@@ -21,6 +21,19 @@ onMounted(() => {
   if ("speechSynthesis" in window) isSupported.value = true;
 });
 
+const speakAndWaitForFinish = () => {
+  return new Promise((resolve) => {
+    const utterThis = new SpeechSynthesisUtterance(input.value);
+    utterThis.lang = "tr-TR";
+
+    utterThis.onend = () => {
+      resolve(true);
+    };
+
+    synth.speak(utterThis);
+  });
+};
+
 const speak = () => {
   if (!isSupported) return;
   else if (input.value === "") {
@@ -30,33 +43,24 @@ const speak = () => {
 
   stopAll();
 
-  const utterThis = new SpeechSynthesisUtterance(input.value);
-  utterThis.lang = "tr-TR";
-
   audio1.play();
 
   setTimeout(() => {
     showVideo.value = true;
   }, 500);
 
-  audio1.onended = () => {
-    synth.speak(utterThis);
-
-    setTimeout(() => {
-      audio2.play();
-    }, 1000);
+  audio1.onended = async () => {
+    await speakAndWaitForFinish();
+    audio2.play();
   };
 
-  audio2.onended = () => {
-    synth.speak(utterThis);
+  audio2.onended = async () => {
+    await speakAndWaitForFinish();
+    audio3.play();
 
     setTimeout(() => {
-      audio3.play();
-
-      setTimeout(() => {
-        buttonVisible.value = true;
-      }, 3000);
-    }, 1000);
+      buttonVisible.value = true;
+    }, 3000);
   };
 
   audio3.onended = () => {
