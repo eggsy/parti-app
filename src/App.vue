@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 
 import firstPartSfx from "@/assets/part1.mp3";
 import secondPartSfx from "@/assets/part2.mp3";
@@ -9,7 +9,13 @@ const input = ref("");
 const isSupported = ref(false);
 const showVideo = ref(false);
 const buttonVisible = ref(false);
-const selectedLanguage = ref("tr-TR");
+const synthesisLanguage = reactive<{
+  lang: string;
+  data: SpeechSynthesisVoice | null;
+}>({
+  lang: "",
+  data: null,
+});
 
 const synth = window.speechSynthesis;
 
@@ -20,15 +26,15 @@ const audio3 = new Audio(thirdPartSfx);
 onMounted(() => {
   stopAll();
 
-  if ("speechSynthesis" in window) isSupported.value = true;
-  else
+  if ("speechSynthesis" in window) {
+    updateSelectedLanguage();
+    synth.onvoiceschanged = updateSelectedLanguage;
+
+    isSupported.value = true;
+  } else
     alert(
       "üzgünüm ama tarayıcın yazıyı sese dönüştürme özelliğini desteklemiyor :c"
     );
-
-  synth?.addEventListener?.("voiceschanged", () => {
-    checkAvailableLanguagesAndFallback();
-  });
 
   input.value = new URLSearchParams(location.search).get("isim") || "";
 });
@@ -36,7 +42,9 @@ onMounted(() => {
 const speakAndWaitForFinish = () =>
   new Promise((resolve) => {
     const utterThis = new SpeechSynthesisUtterance(input.value);
-    utterThis.lang = selectedLanguage.value;
+
+    utterThis.lang = synthesisLanguage.lang;
+    if (synthesisLanguage.data) utterThis.voice = synthesisLanguage.data;
 
     utterThis.onend = () => {
       resolve(true);
@@ -57,15 +65,27 @@ const stopAll = () => {
   buttonVisible.value = false;
 };
 
-const checkAvailableLanguagesAndFallback = () => {
+const updateSelectedLanguage = () => {
   const langs = synth.getVoices();
-  const hasTurkishLang = langs.findIndex((lang) => lang.lang === "tr-TR");
+  const [turkish, fallback] = [
+    langs.find((lang) => lang.lang === "tr-TR"),
+    langs.find((lang) => lang.lang === "en-US"),
+  ];
 
-  if (hasTurkishLang === -1) selectedLanguage.value = "en-US";
+  if (typeof turkish === "object") {
+    synthesisLanguage.lang = "tr-TR";
+    synthesisLanguage.data = turkish;
+  } else if (fallback) {
+    synthesisLanguage.lang = "en-US";
+    synthesisLanguage.data = fallback;
+  }
 };
 
 const speak = () => {
-  if (!isSupported) return;
+  speakAndWaitForFinish();
+  return;
+
+  if (isSupported.value === false) return;
   else if (input.value === "") {
     alert("isim gir.");
     return;
@@ -101,42 +121,40 @@ const speak = () => {
 </script>
 
 <template>
-  <Transition name="fade" mode="out-in">
-    <video
-      v-if="showVideo"
-      src="/birthday-video.mp4"
-      autoplay
-      :controls="false"
-      playsinline
-      muted
-      loop
-      class="fixed inset-0 pointer-events-none h-screen w-screen object-cover"
-    />
-  </Transition>
+  <video
+    v-motion-fade
+    v-if="showVideo"
+    src="/birthday-video.mp4"
+    autoplay
+    :controls="false"
+    playsinline
+    muted
+    loop
+    class="fixed inset-0 pointer-events-none h-screen w-screen object-cover"
+  />
 
-  <Transition name="fade" mode="out-in">
-    <button
-      v-if="buttonVisible"
-      type="button"
-      class="fixed top-4 text-white/50 z-20 hover:text-white transition-colors hover:bg-black/40 right-4 space-x-2 text-sm flex items-center px-3 py-1.5 rounded-lg bg-black/25"
-      @click="stopAll"
+  <button
+    v-motion-fade
+    v-if="buttonVisible"
+    type="button"
+    class="fixed top-4 text-white/50 z-20 hover:text-white transition-colors hover:bg-black/40 right-4 space-x-2 text-sm flex items-center px-3 py-1.5 rounded-lg bg-black/25"
+    @click="stopAll"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      class="w-4 h-4"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        class="w-4 h-4"
-      >
-        <path
-          fill-rule="evenodd"
-          d="M4.5 7.5a3 3 0 013-3h9a3 3 0 013 3v9a3 3 0 01-3 3h-9a3 3 0 01-3-3v-9z"
-          clip-rule="evenodd"
-        />
-      </svg>
+      <path
+        fill-rule="evenodd"
+        d="M4.5 7.5a3 3 0 013-3h9a3 3 0 013 3v9a3 3 0 01-3 3h-9a3 3 0 01-3-3v-9z"
+        clip-rule="evenodd"
+      />
+    </svg>
 
-      <span>Dur</span>
-    </button>
-  </Transition>
+    <span>Dur</span>
+  </button>
 
   <main
     class="transition-all z-20 min-h-screen text-white flex items-center justify-center"
@@ -152,12 +170,24 @@ const speak = () => {
       >
         <input
           v-model="input"
-          class="px-4 py-2 outline-none focus:ring-1 ring-blue-600 rounded-lg text-black"
+          type="text"
+          class="px-4 py-2 outline-none focus:ring-1 ring-blue-600 rounded-lg"
           placeholder="İsim girin"
+          :class="{
+            'text-black': isSupported === true,
+            'bg-white/10 text-white/10 placeholder-white/10':
+              isSupported === false,
+          }"
+          :disabled="isSupported === false"
         />
 
         <button
-          class="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 text-sm py-2"
+          class="rounded-lg px-4 text-sm py-2"
+          :class="{
+            'bg-blue-600 hover:bg-blue-700': isSupported === true,
+            'bg-white/10 text-white/20': isSupported === false,
+          }"
+          :disabled="isSupported === false"
           @click="speak"
         >
           <svg class="h-5 w-5" viewBox="0 0 24 24">
@@ -182,35 +212,34 @@ const speak = () => {
     </Transition>
   </main>
 
-  <Transition name="fade" mode="out-in">
-    <div
-      v-if="showVideo"
-      class="fixed pointer-events-none inset-0 z-10 overflow-hidden"
+  <div
+    v-motion-fade
+    v-if="showVideo"
+    class="fixed pointer-events-none inset-0 z-10 overflow-hidden"
+  >
+    <img
+      src="https://cdn.discordapp.com/emojis/599687667839664198.gif?size=240"
+      alt="dancing blob"
+      class="dancing-blob-animation absolute bottom-0 left-0"
+    />
+
+    <img
+      src="https://cdn.discordapp.com/emojis/766542546046025738.gif?size=240"
+      alt="pepo party"
+      class="absolute rotate-180 top-0 left-0"
+    />
+
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      class="w-24 h-24 absolute top-1/2 music-beat-animation -right-8 text-red-600 -rotate-45"
     >
-      <img
-        src="https://cdn.discordapp.com/emojis/599687667839664198.gif?size=240"
-        alt="dancing blob"
-        class="dancing-blob-animation absolute bottom-0 left-0"
+      <path
+        d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"
       />
-
-      <img
-        src="https://cdn.discordapp.com/emojis/766542546046025738.gif?size=240"
-        alt="pepo party"
-        class="absolute rotate-180 top-0 left-0"
-      />
-
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        class="w-24 h-24 absolute top-1/2 music-beat-animation -right-8 text-red-600 -rotate-45"
-      >
-        <path
-          d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"
-        />
-      </svg>
-    </div>
-  </Transition>
+    </svg>
+  </div>
 </template>
 
 <style>
