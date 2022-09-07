@@ -123,7 +123,7 @@ const speak = () => {
     playsinline
     muted
     loop
-    class="fixed inset-0 pointer-events-none h-screen w-screen object-cover"
+    class="fixed inset-0 overflow-hidden pointer-events-none h-screen w-screen object-cover"
   />
 
   <button
@@ -150,7 +150,7 @@ const speak = () => {
   </button>
 
   <main
-    class="bg-black z-20 min-h-screen text-white flex items-center justify-center"
+    class="bg-black overflow-hidden z-20 min-h-screen text-white flex items-center justify-center"
   >
     <div
       v-motion-pop
