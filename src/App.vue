@@ -168,6 +168,7 @@ const speak = () => {
             isSupported === false,
         }"
         :disabled="isSupported === false"
+        @keydown.enter="speak"
       />
 
       <button
@@ -195,7 +196,7 @@ const speak = () => {
     <h1
       v-motion-pop
       v-else
-      class="text-colored select-none font-bold drop-shadow-sm text-6xl"
+      class="text-colored z-20 text-center px-4 text-4xl select-none font-bold drop-shadow-sm md:text-6xl"
     >
       {{ input }}
     </h1>
