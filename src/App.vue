@@ -9,6 +9,7 @@ const input = ref("");
 const isSupported = ref(false);
 const showVideo = ref(false);
 const buttonVisible = ref(false);
+const hasEnteredFromQuery = ref(false);
 const synthesisLanguage = reactive<{
   lang: string;
   data: SpeechSynthesisVoice | null;
@@ -36,8 +37,15 @@ onMounted(() => {
       "üzgünüm ama tarayıcın yazıyı sese dönüştürme özelliğini desteklemiyor :c"
     );
 
-  input.value = new URLSearchParams(location.search).get("isim") || "";
+  handleSearchByQuery();
 });
+
+const handleSearchByQuery = () => {
+  const parameter = new URLSearchParams(location.search).get("isim") || "";
+  input.value = parameter;
+
+  if (parameter) hasEnteredFromQuery.value = true;
+};
 
 const speakAndWaitForFinish = () =>
   new Promise((resolve) => {
@@ -114,6 +122,7 @@ const speak = () => {
 </script>
 
 <template>
+  <!-- Background video -->
   <video
     v-motion-fade
     v-if="showVideo"
@@ -126,6 +135,7 @@ const speak = () => {
     class="fixed inset-0 overflow-hidden pointer-events-none h-screen w-screen object-cover"
   />
 
+  <!-- Stop button -->
   <button
     v-motion-fade
     v-if="buttonVisible"
@@ -149,7 +159,9 @@ const speak = () => {
     <span>Dur</span>
   </button>
 
+  <!-- Container -->
   <main
+    v-if="showVideo || !hasEnteredFromQuery"
     class="bg-black overflow-hidden z-20 min-h-screen text-white flex items-center justify-center"
   >
     <div
@@ -202,6 +214,24 @@ const speak = () => {
     </h1>
   </main>
 
+  <div
+    v-if="hasEnteredFromQuery === true && showVideo === false"
+    class="text-white w-full z-20 lg:w-1/2 mx-auto text-center px-6 lg:px-0 gap-6 bg-black min-h-screen flex-col flex items-center justify-center"
+  >
+    <h1 class="text-4xl font-medium">
+      Hey <strong class="font-bold text-blue-600">{{ input }}</strong
+      >! Doğum günü kutlamasına hazır mısın?
+    </h1>
+
+    <button
+      class="py-2 px-6 hover:bg-white/10 rounded-lg transition-colors"
+      @click="speak"
+    >
+      Hazırım
+    </button>
+  </div>
+
+  <!-- Absolute emojis -->
   <div
     v-motion-fade
     v-if="showVideo"
