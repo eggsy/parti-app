@@ -9,6 +9,7 @@ const input = ref("");
 const isSupported = ref(false);
 const showVideo = ref(false);
 const buttonVisible = ref(false);
+const selectedLanguage = ref("tr-TR");
 
 const synth = window.speechSynthesis;
 
@@ -25,13 +26,17 @@ onMounted(() => {
       "üzgünüm ama tarayıcın yazıyı sese dönüştürme özelliğini desteklemiyor :c"
     );
 
+  synth?.addEventListener?.("voiceschanged", () => {
+    checkAvailableLanguagesAndFallback();
+  });
+
   input.value = new URLSearchParams(location.search).get("isim") || "";
 });
 
 const speakAndWaitForFinish = () =>
   new Promise((resolve) => {
     const utterThis = new SpeechSynthesisUtterance(input.value);
-    utterThis.lang = "tr-TR";
+    utterThis.lang = selectedLanguage.value;
 
     utterThis.onend = () => {
       resolve(true);
@@ -50,6 +55,13 @@ const stopAll = () => {
 
   showVideo.value = false;
   buttonVisible.value = false;
+};
+
+const checkAvailableLanguagesAndFallback = () => {
+  const langs = synth.getVoices();
+  const hasTurkishLang = langs.findIndex((lang) => lang.lang === "tr-TR");
+
+  if (hasTurkishLang === -1) selectedLanguage.value = "en-US";
 };
 
 const speak = () => {
@@ -95,6 +107,8 @@ const speak = () => {
       src="/birthday-video.mp4"
       autoplay
       :controls="false"
+      playsinline
+      muted
       loop
       class="fixed inset-0 pointer-events-none h-screen w-screen object-cover"
     />
@@ -209,8 +223,10 @@ const speak = () => {
 .fade-leave-to {
   opacity: 0;
 }
+</style>
 
-/* color changing text animation */
+<style>
+/* animations */
 .text-colored {
   animation: color-change 3s infinite;
 }
