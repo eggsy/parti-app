@@ -82,9 +82,6 @@ const updateSelectedLanguage = () => {
 };
 
 const speak = () => {
-  speakAndWaitForFinish();
-  return;
-
   if (isSupported.value === false) return;
   else if (input.value === "") {
     alert("isim gir.");
