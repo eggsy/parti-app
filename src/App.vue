@@ -89,12 +89,8 @@ const speak = () => {
   }
 
   stopAll();
-
   audio1.play();
-
-  setTimeout(() => {
-    showVideo.value = true;
-  }, 500);
+  showVideo.value = true;
 
   audio1.onended = async () => {
     await speakAndWaitForFinish();
@@ -154,59 +150,55 @@ const speak = () => {
   </button>
 
   <main
-    class="transition-all z-20 min-h-screen text-white flex items-center justify-center"
-    :class="{
-      'bg-black': !showVideo,
-      'bg-transparent': showVideo,
-    }"
+    class="bg-black z-20 min-h-screen text-white flex items-center justify-center"
   >
-    <Transition name="fade" mode="out-in">
-      <div
-        v-if="!showVideo"
-        class="w-1/4 justify-center flex items-stretch gap-2"
-      >
-        <input
-          v-model="input"
-          type="text"
-          class="px-4 py-2 outline-none focus:ring-1 ring-blue-600 rounded-lg"
-          placeholder="İsim girin"
-          :class="{
-            'text-black': isSupported === true,
-            'bg-white/10 text-white/10 placeholder-white/10':
-              isSupported === false,
-          }"
-          :disabled="isSupported === false"
-        />
+    <div
+      v-motion-pop
+      v-if="!showVideo"
+      class="w-1/4 justify-center flex items-stretch gap-2"
+    >
+      <input
+        v-model="input"
+        type="text"
+        class="px-4 py-2 outline-none focus:ring-1 ring-blue-600 transition-all rounded-lg"
+        placeholder="İsim girin"
+        :class="{
+          'text-black': isSupported === true,
+          'bg-white/10 text-white/10 placeholder-white/10':
+            isSupported === false,
+        }"
+        :disabled="isSupported === false"
+      />
 
-        <button
-          class="rounded-lg px-4 text-sm py-2"
-          :class="{
-            'bg-blue-600 hover:bg-blue-700': isSupported === true,
-            'bg-white/10 text-white/20': isSupported === false,
-          }"
-          :disabled="isSupported === false"
-          @click="speak"
-        >
-          <svg class="h-5 w-5" viewBox="0 0 24 24">
-            <path
-              d="M23 7a8.44 8.44 0 0 0-5 1.31c-.36-.41-.73-.82-1.12-1.21l-.29-.27l.14-.12a3.15 3.15 0 0 0 .9-3.49A3.9 3.9 0 0 0 14 1v2a2 2 0 0 1 1.76 1c.17.4 0 .84-.47 1.31l-.23.21a16.71 16.71 0 0 0-3.41-2.2c-2.53-1.14-3.83-.61-4.47 0a2.18 2.18 0 0 0-.46.68l-.18.53L5.1 8.87C6.24 11.71 9 16.76 15 18.94l5-1.66a1 1 0 0 0 .43-.31l.21-.18c1.43-1.44.51-4.21-1.41-6.9A6.63 6.63 0 0 1 23 9zm-3.79 8.37h-.06c-.69.37-3.55-.57-6.79-3.81c-.34-.34-.66-.67-.95-1c-.1-.11-.19-.23-.29-.35l-.53-.64l-.28-.39c-.14-.19-.28-.38-.4-.56s-.16-.26-.24-.39s-.22-.34-.31-.51s-.13-.24-.19-.37s-.17-.28-.23-.42s-.09-.23-.14-.34s-.11-.27-.15-.4S8.6 6 8.58 5.9s-.06-.24-.08-.34a2 2 0 0 1 0-.24a1.15 1.15 0 0 1 0-.26l.11-.31c.17-.18.91-.23 2.23.37a13.83 13.83 0 0 1 2.49 1.54A4.17 4.17 0 0 1 12 7v2a6.43 6.43 0 0 0 3-.94l.49.46c.44.43.83.86 1.19 1.27A5.31 5.31 0 0 0 16 13.2l2-.39a3.23 3.23 0 0 1 0-1.14c1.29 1.97 1.53 3.39 1.21 3.7z"
-              fill="currentColor"
-            />
-            <path
-              d="M4.4 11l-2.23 6.7A3.28 3.28 0 0 0 5.28 22a3.21 3.21 0 0 0 1-.17l6.52-2.17A18.7 18.7 0 0 1 4.4 11z"
-              fill="currentColor"
-            />
-          </svg>
-        </button>
-      </div>
-
-      <h1
-        v-else
-        class="text-colored select-none font-bold drop-shadow-sm text-6xl"
+      <button
+        class="rounded-lg transition-colors px-4 text-sm py-2"
+        :class="{
+          'bg-blue-600 hover:bg-blue-700': isSupported === true,
+          'bg-white/10 text-white/20': isSupported === false,
+        }"
+        :disabled="isSupported === false"
+        @click="speak"
       >
-        {{ input }}
-      </h1>
-    </Transition>
+        <svg class="h-5 w-5" viewBox="0 0 24 24">
+          <path
+            d="M23 7a8.44 8.44 0 0 0-5 1.31c-.36-.41-.73-.82-1.12-1.21l-.29-.27l.14-.12a3.15 3.15 0 0 0 .9-3.49A3.9 3.9 0 0 0 14 1v2a2 2 0 0 1 1.76 1c.17.4 0 .84-.47 1.31l-.23.21a16.71 16.71 0 0 0-3.41-2.2c-2.53-1.14-3.83-.61-4.47 0a2.18 2.18 0 0 0-.46.68l-.18.53L5.1 8.87C6.24 11.71 9 16.76 15 18.94l5-1.66a1 1 0 0 0 .43-.31l.21-.18c1.43-1.44.51-4.21-1.41-6.9A6.63 6.63 0 0 1 23 9zm-3.79 8.37h-.06c-.69.37-3.55-.57-6.79-3.81c-.34-.34-.66-.67-.95-1c-.1-.11-.19-.23-.29-.35l-.53-.64l-.28-.39c-.14-.19-.28-.38-.4-.56s-.16-.26-.24-.39s-.22-.34-.31-.51s-.13-.24-.19-.37s-.17-.28-.23-.42s-.09-.23-.14-.34s-.11-.27-.15-.4S8.6 6 8.58 5.9s-.06-.24-.08-.34a2 2 0 0 1 0-.24a1.15 1.15 0 0 1 0-.26l.11-.31c.17-.18.91-.23 2.23.37a13.83 13.83 0 0 1 2.49 1.54A4.17 4.17 0 0 1 12 7v2a6.43 6.43 0 0 0 3-.94l.49.46c.44.43.83.86 1.19 1.27A5.31 5.31 0 0 0 16 13.2l2-.39a3.23 3.23 0 0 1 0-1.14c1.29 1.97 1.53 3.39 1.21 3.7z"
+            fill="currentColor"
+          />
+          <path
+            d="M4.4 11l-2.23 6.7A3.28 3.28 0 0 0 5.28 22a3.21 3.21 0 0 0 1-.17l6.52-2.17A18.7 18.7 0 0 1 4.4 11z"
+            fill="currentColor"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <h1
+      v-motion-pop
+      v-else
+      class="text-colored select-none font-bold drop-shadow-sm text-6xl"
+    >
+      {{ input }}
+    </h1>
   </main>
 
   <div
